@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::{domain::auth::SignupRequest, repositories::user_repository::UserRepository};
+use crate::{domain::auth::SignupRequest, repositories::user_repository::UserRepository, utils};
 
 #[async_trait]
 pub trait UserService: Sync + Send + 'static {
@@ -29,7 +29,8 @@ impl UserService for UserServiceImpl {
             return Err(format!("User with email {} already exists", user));
         }
 
-        let create_user_modal = user.to_create_user("password_hash".to_string());
+        let password_hash = utils::hash::hash_data(&user.password);
+        let create_user_modal = user.to_create_user(password_hash);
 
         if let Err(e) = self.user_repository.create_user(create_user_modal).await {
             return Err(e);
