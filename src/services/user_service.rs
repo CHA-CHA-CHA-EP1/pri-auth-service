@@ -28,6 +28,13 @@ impl UserService for UserServiceImpl {
         if let Some(user) = self.user_repository.find_by_email(&user.email).await {
             return Err(format!("User with email {} already exists", user));
         }
+
+        let create_user_modal = user.to_create_user("password_hash".to_string());
+
+        if let Err(e) = self.user_repository.create_user(create_user_modal).await {
+            return Err(e);
+        }
+
         Ok(())
     }
 }

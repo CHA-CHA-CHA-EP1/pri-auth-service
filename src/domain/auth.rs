@@ -1,5 +1,8 @@
+use core::fmt;
+
 use validator::{Validate, ValidationError};
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
 
 #[derive(Debug, Validate, Deserialize, Serialize)]
 pub struct LoginRequest {
@@ -9,11 +12,22 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Type)]
+#[sqlx(type_name = "UserStatus")]
 pub enum UserStatus {
     ACTIVE,
     INACTIVE,
     Err
+}
+
+impl fmt::Display for UserStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            UserStatus::ACTIVE => write!(f, "ACTIVE"),
+            UserStatus::INACTIVE => write!(f, "INACTIVE"),
+            UserStatus::Err => write!(f, "Err"),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for UserStatus {
@@ -64,3 +78,33 @@ pub struct SignupRequest {
     #[validate(custom(function = "validate_user_status", code = "400", message = "Invalid user status"))]
     pub status: UserStatus,
 }
+
+#[derive(Debug)]
+pub struct CreateUser {
+    pub email: String,
+    pub password_hash: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub permission_system_setting: bool,
+    pub permission_schedule: bool,
+    pub permission_temporary_schedule: bool,
+    pub permission_post_setting: bool,
+    pub status: UserStatus,
+}
+
+impl SignupRequest {
+    pub fn to_create_user(&self, password_hash: String) -> CreateUser {
+        CreateUser {
+            email: self.email.clone(),
+            password_hash,
+            first_name: self.first_name.clone(),
+            last_name: self.last_name.clone(),
+            permission_system_setting: self.permission_system_setting.unwrap_or(false),
+            permission_schedule: self.permission_schedule.unwrap_or(false),
+            permission_temporary_schedule: self.permission_temporary_schedule.unwrap_or(false),
+            permission_post_setting: self.permission_post_setting.unwrap_or(false),
+            status: self.status.clone(),
+        }
+    }
+}
+

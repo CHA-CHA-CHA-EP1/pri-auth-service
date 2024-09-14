@@ -41,7 +41,7 @@ pub async fn signup(
 
     HttpResponse::Ok().json(BaseResponse {
         code: 200,
-        message: "Signup success".to_string(),
+        message: "user created".to_string(),
     })
 }
 

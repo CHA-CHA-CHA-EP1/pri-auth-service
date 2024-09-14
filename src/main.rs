@@ -19,8 +19,6 @@ fn on_server_start() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    on_server_start();
-
     let database_url: String = "postgres://postgres:postgres@localhost:5433/postgres".to_string();
 
     println!("Database connecting...");
@@ -43,6 +41,8 @@ async fn main() -> std::io::Result<()> {
     let user_service = services::user_service::UserServiceImpl::new(
         Arc::new(user_repository)
     );
+
+    on_server_start();
 
     HttpServer::new(move || {
         let cors = Cors::default();
