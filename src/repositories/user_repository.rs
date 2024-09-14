@@ -1,15 +1,24 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
+use sqlx::{Pool, Postgres};
 
 #[async_trait]
 pub trait UserRepository: Sync + Send + 'static {
     async fn find_by_email(&self, email: &str) -> Option<String>;
 }
 
-pub struct UserRepositoryImpl {}
+pub struct UserRepositoryImpl {
+    db: Arc<Pool<Postgres>>
+}
 
 impl UserRepositoryImpl {
-    pub fn new() -> UserRepositoryImpl {
-        UserRepositoryImpl {}
+    pub fn new(
+        db: Arc<Pool<Postgres>>
+    ) -> UserRepositoryImpl {
+        UserRepositoryImpl {
+            db
+        }
     }
 }
 
