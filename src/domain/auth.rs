@@ -1,4 +1,4 @@
-use validator::Validate;
+use validator::{Validate, ValidationError};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Validate, Deserialize, Serialize)]
@@ -11,18 +11,40 @@ pub struct LoginRequest {
 
 #[derive(Debug, Serialize)]
 pub enum UserStatus {
-    Active,
-    Inactive,
+    ACTIVE,
+    INACTIVE,
     Err
+}
+
+impl<'de> Deserialize<'de> for UserStatus {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> 
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        match s.as_str() {
+            "ACTIVE" => Ok(UserStatus::ACTIVE),
+            "INACTIVE" => Ok(UserStatus::INACTIVE),
+            _ => Ok(UserStatus::Err)
+        }
+    }
+}
+
+fn validate_user_status(us: &UserStatus) -> Result<(), ValidationError> {
+    match us {
+        UserStatus::ACTIVE => Ok(()),
+        UserStatus::INACTIVE => Ok(()),
+        UserStatus::Err => Err(ValidationError::new("Invalid user status")),
+    }
 }
 
 impl Default for UserStatus {
     fn default() -> Self {
-        UserStatus::Inactive
+        UserStatus::INACTIVE
     }
 }
 
-#[derive(Debug, Validate, Default)]
+#[derive(Debug, Validate, Default, Serialize, Deserialize)]
 pub struct SignupRequest {
     #[validate(email(code = "400", message = "Invalid email"))]
     pub email: String,
@@ -39,5 +61,6 @@ pub struct SignupRequest {
     pub permission_temporary_schedule: Option<bool>,
     pub permission_post_setting: Option<bool>,
 
+    #[validate(custom(function = "validate_user_status", code = "400", message = "Invalid user status"))]
     pub status: UserStatus,
 }
