@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait UserRepository: Sync + Send {
+pub trait UserRepository: Sync + Send + 'static {
     async fn find_by_email(&self, email: &str) -> Option<String>;
 }
 
@@ -16,6 +16,10 @@ impl UserRepositoryImpl {
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn find_by_email(&self, email: &str) -> Option<String> {
-        Some("user".to_string())
+        if email == "admin@gmail.com" {
+            Some("admin".to_string())
+        } else {
+            None
+        }
     }
 }

@@ -1,28 +1,33 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 
-use crate::domain::auth::SignupRequest;
+use crate::{domain::auth::SignupRequest, repositories::user_repository::UserRepository};
 
 #[async_trait]
-pub trait UserService {
+pub trait UserService: Sync + Send + 'static {
     async fn create_user(&self, user: SignupRequest) -> Result<(), String>;
 }
 
 #[derive(Clone)]
-pub struct UserServiceImpl {}
+pub struct UserServiceImpl {
+    user_repository: Arc<dyn UserRepository>
+}
 
 impl UserServiceImpl {
-    pub fn new() -> Self {
-        UserServiceImpl {}
+    pub fn new(user_repository: Arc<dyn UserRepository>) -> Self {
+        UserServiceImpl {
+            user_repository,
+        }
     }
 }
 
 #[async_trait]
 impl UserService for UserServiceImpl {
     async fn create_user(&self, user: SignupRequest) -> Result<(), String> {
-        if user.email == "admin@gmail.com" {
-            return Err("Email already exists".to_string())
+        if let Some(user) = self.user_repository.find_by_email(&user.email).await {
+            return Err(format!("User with email {} already exists", user));
         }
-
         Ok(())
     }
 }
