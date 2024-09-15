@@ -15,7 +15,7 @@ pub struct CreateUser {
     pub status: UserStatus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
     pub email: String,
     pub password: String,

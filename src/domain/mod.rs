@@ -7,5 +7,3 @@ pub struct BaseResponse {
     pub code: u16,
     pub message: String,
 }
-
-

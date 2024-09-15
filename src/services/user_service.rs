@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use jsonwebtoken::{encode, EncodingKey, Header};
 
-use crate::{domain::dto::{login_request::{Email, Password}, signup_request::SignupRequest}, repositories::user_repository::UserRepository, utils};
+use crate::{domain::{dto::{login_request::{Email, Password}, signup_request::SignupRequest}, utils}, repositories::user_repository::UserRepository};
 
 #[async_trait]
 pub trait UserService: Sync + Send + 'static {
@@ -30,7 +31,7 @@ impl UserService for UserServiceImpl {
             return Err("User already exists".to_string());
         }
 
-        let password_hash = utils::hash::hash_data(&user.password);
+        let password_hash = crate::utils::hash::hash_data(&user.password);
         let create_user_modal = user.to_create_user(password_hash);
 
         if let Err(e) = self.user_repository.create_user(create_user_modal).await {
@@ -46,10 +47,25 @@ impl UserService for UserServiceImpl {
             return Err("User not found".to_string());
         }
 
-        let password_hash = utils::hash::hash_data(&password.into_inner());
-        if user.unwrap().password != password_hash {
+        let password_hash = crate::utils::hash::hash_data(&password.into_inner());
+        if password_hash != user.clone().unwrap().password {
             return Err("Invalid password".to_string());
         }
-        Ok("access_token".to_string())
+
+        let claims = utils::jwt::Claims {
+            sub: user.clone().unwrap().email,
+            exp: (chrono::Utc::now() + chrono::Duration::days(1)).timestamp() as usize,
+        };
+
+        let access_token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(b"secret")
+        );
+
+        match access_token {
+            Ok(token) => Ok(token),
+            Err(e) => Err(e.to_string())
+        }
     }
 }
