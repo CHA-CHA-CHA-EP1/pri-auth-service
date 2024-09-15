@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::{domain::auth::SignupRequest, repositories::user_repository::UserRepository, utils};
+use crate::{repositories::user_repository::UserRepository, utils, domain::dto::signup_request::SignupRequest};
 
 #[async_trait]
 pub trait UserService: Sync + Send + 'static {
