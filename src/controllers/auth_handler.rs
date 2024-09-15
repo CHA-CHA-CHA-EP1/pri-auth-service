@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, Responder};
 use validator::Validate;
 
-use crate::{domain::{auth::{LoginRequest, SignupRequest}, BaseResponse}, services::user_service::UserService, AppState};
+use crate::{domain::{dto::{login_request::LoginRequest, signup_request::SignupRequest}, BaseResponse}, services::user_service::UserService, AppState};
 
 pub async fn signin(
     login_request: web::Json<LoginRequest>,

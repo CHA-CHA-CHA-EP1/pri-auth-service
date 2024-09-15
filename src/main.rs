@@ -19,7 +19,7 @@ fn on_server_start() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let database_url: String = "postgres://postgres:postgres@localhost:5433/postgres".to_string();
+    let database_url: String = "postgres://postgres:postgres@127.0.0.1:5433/postgres".to_string();
 
     println!("Database connecting...");
 

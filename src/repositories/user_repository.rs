@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::domain::auth::{CreateUser, UserStatus};
+use crate::domain::{auth::CreateUser, utils::user_status::UserStatus};
 
 #[async_trait]
 pub trait UserRepository: Sync + Send + 'static {
