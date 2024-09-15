@@ -3,11 +3,11 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::domain::{auth::CreateUser, utils::user_status::UserStatus};
+use crate::domain::{auth::{CreateUser, User}, utils::user_status::UserStatus};
 
 #[async_trait]
 pub trait UserRepository: Sync + Send + 'static {
-    async fn find_by_email(&self, email: &str) -> Option<String>;
+    async fn find_by_email(&self, email: &str) -> Option<User>;
     async fn create_user(&self, user: CreateUser) -> Result<(), String>;
 }
 
@@ -27,16 +27,20 @@ impl UserRepositoryImpl {
 
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
-    async fn find_by_email(&self, email: &str) -> Option<String> {
-        let user = sqlx::query!("SELECT email FROM users WHERE email = $1", email)
-            .fetch_one(&*self.db)
-            .await
-            .ok();
+    async fn find_by_email(&self, email: &str) -> Option<User> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            SELECT email, password, first_name, last_name, permission_system_setting, permission_schedule, permission_temporary_schedule, permission_post_setting, status AS "status: UserStatus"
+            FROM users
+            WHERE email = $1
+            "#,
+            email
+        ).fetch_one(&*self.db).await;
 
-        if let Some(user) = user {
-            Some(user.email)
-        } else {
-            None
+        match user {
+            Ok(user) => Some(user),
+            Err(_) => None
         }
     }
 
