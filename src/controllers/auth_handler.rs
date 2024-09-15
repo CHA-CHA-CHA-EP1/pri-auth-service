@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, Responder};
 use validator::Validate;
 
-use crate::{domain::{dto::{login_request::LoginRequest, signup_request::SignupRequest}, BaseResponse}, services::user_service::UserService, AppState};
+use crate::{domain::{dto::{login_request::LoginRequest, login_response::LoginResponse, signup_request::SignupRequest}, BaseResponse}, services::user_service::UserService, AppState};
 
 pub async fn signin(
     login_request: web::Json<LoginRequest>,
@@ -17,9 +17,12 @@ pub async fn signin(
     let (email, password) = login_request.into_inner().into_inner();
     match service.auth_service.signin(email, password).await {
         Ok(token) => {
-            return HttpResponse::Ok().json(BaseResponse {
-                code: 200,
-                message: token,
+            return HttpResponse::Ok().json(LoginResponse {
+                base: BaseResponse {
+                    code: 200,
+                    message: "ok".to_string(),
+                },
+                access_token: token,
             });
         }
         Err(e) => {
