@@ -5,6 +5,7 @@ use crate::{domain::{dto::{login_request::LoginRequest, signup_request::SignupRe
 
 pub async fn signin(
     login_request: web::Json<LoginRequest>,
+    service: web::Data<AppState>
     ) -> impl Responder {
     if let Err(e) = login_request.validate() {
         return HttpResponse::BadRequest().json(BaseResponse {
@@ -13,10 +14,21 @@ pub async fn signin(
         });
     }
 
-    HttpResponse::Ok().json(BaseResponse {
-        code: 200,
-        message: "Login success".to_string(),
-    })
+    let (email, password) = login_request.into_inner().into_inner();
+    match service.auth_service.signin(email, password).await {
+        Ok(token) => {
+            return HttpResponse::Ok().json(BaseResponse {
+                code: 200,
+                message: token,
+            });
+        }
+        Err(e) => {
+            return HttpResponse::BadRequest().json(BaseResponse {
+                code: 400,
+                message: e,
+            });
+        }
+    }
 }
 
 pub async fn signup(
